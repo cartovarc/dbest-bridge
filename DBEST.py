@@ -30,10 +30,12 @@ INTERNAL_ERROR = 'INTERNAL_ERROR'
 NO_SERIAL_PORT = 'NO_SERIAL_PORT'
 FORBIDDEN_ERROR = 'FORBIDDEN_ERROR'
 SENT = 'SENT'
+LOST_UPDATE = "LOST_UPDATE"
+MAX_TIME_WITHOUT_UPDATE = 5 #seconds
 
 lock = Lock()  # Lock for multiple requests
 app = Flask(__name__)  # app for http server
-
+last_state = LOST_UPDATE
 
 def get_port():
     try:
@@ -72,7 +74,8 @@ def receive_data():
     result = None
     if ser:
         try:
-            received_message = str(ser.readline())
+            received_message = ser.readline()
+            received_message = received_message.decode('utf-8')
             result = received_message
         except Exception:
             result = INTERNAL_ERROR
@@ -100,10 +103,20 @@ def process_message(message):
 
 
 def read_state():
+    global last_state
+    time_0 = time.time()
     while True:
         data = receive_data()
-        print('READ: ' + str(data))
-        time.sleep(0.2)
+
+        if data != "":
+            time_0 = time.time()
+            last_state = data
+        elif time.time() >= time_0 + MAX_TIME_WITHOUT_UPDATE:
+            last_state = LOST_UPDATE
+
+        print('READ: ' + data)
+        print("current state: %s"%last_state)
+        time.sleep(0.1)
 
 
 thread = threading.Thread(target=read_state, args=[])
@@ -111,4 +124,4 @@ thread.daemon = True
 thread.start()
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=80)
