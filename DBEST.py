@@ -56,7 +56,7 @@ def send_data(message):
     result = None
     if ser:
         try:
-            ser.write(bytes(message, 'utf-8'))
+            ser.write(bytes(message))
             result = SENT
         except serial.SerialTimeoutException:
             result = TIMEOUT_ERROR
@@ -127,4 +127,4 @@ thread.daemon = True
 thread.start()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0')
