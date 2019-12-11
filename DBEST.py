@@ -95,7 +95,10 @@ def send_and_receive(message):
 
 @app.route('/<message>')
 def process_message(message):
+    global last_state
     if message in ALLOWED_MESSAGES:
+        if message == GET_STATE:
+            return last_state
         result = send_data(message)
         return result
     else:
