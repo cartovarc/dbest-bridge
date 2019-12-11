@@ -9,12 +9,23 @@ import threading
 
 # serial config
 BAUDRATE = 9600
-TIMEOUT = 0.5
+TIMEOUT = 0.1
 
 PREPARE_EXCHANGER = 'PREPARE_EXCHANGER'
 DRON_IN = 'DRON_IN'
 DRON_OUT = 'DRON_OUT'
 GET_STATE = 'GET_STATE'
+SET_VALUES_INIT_BOTON = 'SET_VALUES_INIT_BOTON'
+SET_VALUES_INIT_BATTERY = 'SET_VALUES_INIT_BATTERY'
+SET_VALUES_INIT_SOCKET_COMMON = 'SET_VALUES_INIT_SOCKET_COMMON'
+SET_VALUES_INIT_SOCKET_1 = 'SET_VALUES_INIT_SOCKET_1'
+SET_VALUES_INIT_SOCKET_2 = 'SET_VALUES_INIT_SOCKET_2'
+SET_VALUES_INIT_SOCKET_3 = 'SET_VALUES_INIT_SOCKET_3'
+SET_VALUES_INIT_SOCKET_4 = 'SET_VALUES_INIT_SOCKET_4'
+SET_VALUES_INIT_SOCKET_5 = 'SET_VALUES_INIT_SOCKET_5'
+SET_VALUES_INIT_SOCKET_6 = 'SET_VALUES_INIT_SOCKET_6'
+SET_VALUES_INIT_SOCKET_7 = 'SET_VALUES_INIT_SOCKET_7'
+SET_VALUES_INIT_SOCKET_8 = 'SET_VALUES_INIT_SOCKET_8'
 DEBUG_LED = '1'
 DEBUG_STATE = '2'
 ALLOWED_MESSAGES = [
@@ -24,6 +35,17 @@ ALLOWED_MESSAGES = [
     GET_STATE,
     DEBUG_LED,
     DEBUG_STATE,
+    SET_VALUES_INIT_BOTON,
+    SET_VALUES_INIT_BATTERY,
+    SET_VALUES_INIT_SOCKET_COMMON,
+    SET_VALUES_INIT_SOCKET_1,
+    SET_VALUES_INIT_SOCKET_2,
+    SET_VALUES_INIT_SOCKET_3,
+    SET_VALUES_INIT_SOCKET_4,
+    SET_VALUES_INIT_SOCKET_5,
+    SET_VALUES_INIT_SOCKET_6,
+    SET_VALUES_INIT_SOCKET_7,
+    SET_VALUES_INIT_SOCKET_8,
 ]
 TIMEOUT_ERROR = 'TIMEOUT_ERROR'
 INTERNAL_ERROR = 'INTERNAL_ERROR'
@@ -36,6 +58,7 @@ MAX_TIME_WITHOUT_UPDATE = 5 #seconds
 lock = Lock()  # Lock for multiple requests
 app = Flask(__name__)  # app for http server
 last_state = LOST_UPDATE
+freq_receive = 30 # try requests update per second
 
 def get_port():
     try:
@@ -44,7 +67,6 @@ def get_port():
         ser = serial.Serial(device_name, BAUDRATE, timeout=TIMEOUT)
         return ser
     except Exception:
-        # print("NOT AVAILBLE DEVICES")
         return None
 
 
@@ -107,19 +129,18 @@ def process_message(message):
 
 def read_state():
     global last_state
-    time_0 = time.time()
+    time_0_last_update = time.time()
+    time_0_last_cycle = time.time()
     while True:
-        data = receive_data()
-
-        if data != "":
-            time_0 = time.time()
-            last_state = data
-        elif time.time() >= time_0 + MAX_TIME_WITHOUT_UPDATE:
-            last_state = LOST_UPDATE
-
-        print('READ: ' + data)
-        print("current state: %s"%last_state)
-        time.sleep(0.1)
+        if time.time() >= time_0_last_cycle + 1.0/freq_receive:
+            time_0_last_cycle = time.time()
+            data = receive_data()
+            if data != "":
+                time_0_last_update = time.time()
+                last_state = data
+            elif time.time() >= time_0_last_update + MAX_TIME_WITHOUT_UPDATE:
+                last_state = LOST_UPDATE
+            print("current state: %s"%last_state)
 
 
 thread = threading.Thread(target=read_state, args=[])
