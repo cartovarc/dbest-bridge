@@ -7,7 +7,7 @@ IOT solution that bridges a serial communication interface and an http server fo
 
 ## Installation
 
-Install flask and pyserial
+Install flask, pyserial and fix
 
     pip install requirements.txt
 
