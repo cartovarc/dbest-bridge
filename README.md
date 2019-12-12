@@ -3,7 +3,7 @@
 
 ## Introduction
 
-IOT solution that bridges a serial communication interface and an http server for DBEST battery exchanger system. This script was tested in python 3.6.9.
+IOT solution that bridges a serial communication interface and an http server for DBEST battery exchanger system. This script was tested in python 3.6.9 and 2.7.15.
 
 ## Installation
 
