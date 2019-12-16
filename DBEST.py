@@ -68,22 +68,25 @@ def get_port():
         if ser and len(comports) != 0:
             if not ser.is_open:
                 ser.open()
-            return ser
         if ser and len(comports) == 0:
             ser.reset_input_buffer()
             ser.reset_output_buffer()
-            ser.close()
+            if ser.is_open:
+            	ser.close()
             ser = None
         elif not ser and len(comports) != 0:
             device_name = comports[0].device
             ser = serial.Serial(device_name, timeout=0.2, baudrate = BAUDRATE, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE)
             ser.reset_input_buffer()
             ser.reset_output_buffer()
-            ser.open()
+            if not ser.is_open:
+                ser.open()
         elif not ser and len(comports) == 0:
             pass
+	print(len(comports))
         return ser
-    except Exception:
+    except Exception as e:
+	print(e)
         return None
 
 
@@ -139,7 +142,7 @@ def send_and_receive(message):
     return receive_result
 
 
-@app.route('/<message>')
+@app.route('/send/<message>')
 def process_message(message):
     if message in ALLOWED_MESSAGES:
         if message == GET_STATE:
