@@ -26,17 +26,19 @@ SET_VALUES_INIT_SOCKET_5 = '12'
 SET_VALUES_INIT_SOCKET_6 = '13'
 SET_VALUES_INIT_SOCKET_7 = '14'
 SET_VALUES_INIT_SOCKET_8 = '15'
-DEBUG_LED = '97'
-DEBUG_STATE_1 = '98'
-DEBUG_STATE_2 = '99'
+ZERO = '96'
+WAKE_UP = '97'
+DRONE_SLEEP = '98'
+DEBUG_LED = '99'
 ALLOWED_MESSAGES = [
     PREPARE_EXCHANGER,
     DRON_IN,
     DRON_OUT,
     GET_STATE,
+    ZERO,
+    WAKE_UP,
+    DRONE_SLEEP,
     DEBUG_LED,
-    DEBUG_STATE_1,
-    DEBUG_STATE_2,
     SET_VALUES_INIT_BOTON,
     SET_VALUES_INIT_BATTERY,
     SET_VALUES_INIT_SOCKET_COMMON,
@@ -83,15 +85,14 @@ def get_port():
                 ser.open()
         elif not ser and len(comports) == 0:
             pass
-	print(len(comports))
+        print(len(comports))
         return ser
     except Exception as e:
-	print(e)
+        print(e)
         return None
 
 
 def send_data(message):
-    lock.acquire()
     print('MESSAGE TO SEND: ' + str(message))
     ser = get_port()
     #print('SERIAL PORT %s' % ser)
@@ -110,12 +111,10 @@ def send_data(message):
             result = INTERNAL_ERROR
     else:
         result = NO_SERIAL_PORT
-    lock.release()
     return result
 
 
 def receive_data():
-    lock.acquire()
     ser = get_port()
     result = None
     if ser:
@@ -130,7 +129,6 @@ def receive_data():
         result = NO_SERIAL_PORT
     if result == '':
         result = NO_DATA
-    lock.release()
     return result
 
 
@@ -144,6 +142,7 @@ def send_and_receive(message):
 
 @app.route('/send/<message>')
 def process_message(message):
+    lock.acquire()
     if message in ALLOWED_MESSAGES:
         if message == GET_STATE:
             result = send_and_receive(message)
@@ -152,6 +151,7 @@ def process_message(message):
         return result
     else:
         return FORBIDDEN_ERROR
+    lock.release()
     
 
 def debug_read_buffer():
