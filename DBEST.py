@@ -142,16 +142,16 @@ def send_and_receive(message):
 
 @app.route('/send/<message>')
 def process_message(message):
-    lock.acquire()
     if message in ALLOWED_MESSAGES:
+        lock.acquire()
         if message == GET_STATE:
             result = send_and_receive(message)
         else:
             result = send_data(message)
+        lock.release()
         return result
     else:
         return FORBIDDEN_ERROR
-    lock.release()
     
 
 def debug_read_buffer():
